@@ -5,6 +5,8 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { SettingsConfig } from '@/types/backup';
 import { Settings, Database, Folder, ShieldCheck, CheckCircle2, Save, Trash2 } from 'lucide-react';
 
+import { ConnectionSelector } from '@/components/settings/ConnectionSelector';
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SettingsConfig>({
     mongodbContainer: 'ast-mongodb',
@@ -80,9 +82,12 @@ export default function SettingsPage() {
             Backup Center Settings
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Configure system parameters, target MongoDB collections, and backup retention policies.
+            Configure system parameters, target MongoDB servers/databases, and backup retention policies.
           </p>
         </div>
+
+        {/* MongoDB Server Connections & Database Selection */}
+        <ConnectionSelector />
 
         {/* Section 1: MongoDB & Storage Environment */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl shadow-xl space-y-4">

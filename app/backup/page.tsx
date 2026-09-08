@@ -7,6 +7,8 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { BackupProgressTracker } from '@/components/backup/BackupProgressTracker';
 import { PlayCircle, Database, HardDrive, ShieldCheck, Folder, FileJson, ArrowLeft } from 'lucide-react';
 
+import { ConnectionSelector } from '@/components/settings/ConnectionSelector';
+
 export default function RunBackupPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -27,7 +29,7 @@ export default function RunBackupPage() {
               Run MongoDB Backup
             </h1>
             <p className="text-xs text-slate-400 mt-0.5">
-              Trigger an immediate live export of factory database collections.
+              Trigger an immediate live export of database collections.
             </p>
           </div>
 
@@ -38,6 +40,9 @@ export default function RunBackupPage() {
             <ArrowLeft className="h-3.5 w-3.5" /> Back to Overview
           </Link>
         </div>
+
+        {/* Server & Database Connection Selector */}
+        <ConnectionSelector />
 
         {!isRunning ? (
           /* Pre-run Overview Card */

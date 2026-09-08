@@ -10,6 +10,8 @@ import { BackupMetadata, SystemHealth } from '@/types/backup';
 import { PlayCircle, Database, Calendar, ScrollText, Download, Eye, Trash2, ArrowRight, HardDrive, FileJson, CheckCircle2 } from 'lucide-react';
 import { formatBytes } from '@/lib/utils/formatters';
 
+import { ConnectionSelector } from '@/components/settings/ConnectionSelector';
+
 export default function DashboardPage() {
   const [backups, setBackups] = useState<BackupMetadata[]>([]);
   const [health, setHealth] = useState<SystemHealth | null>(null);
@@ -73,7 +75,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-base font-bold font-mono text-slate-100">MongoDB Backup Center</h1>
-            <p className="text-xs text-slate-500 mt-0.5">factory database · {health?.mongodb.status === 'ONLINE' ? <span className="text-emerald-400">Connected</span> : <span className="text-slate-500">Connecting...</span>}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{health?.mongodb.database || 'factory'} database · {health?.mongodb.status === 'ONLINE' ? <span className="text-emerald-400">Connected</span> : <span className="text-slate-500">Connecting...</span>}</p>
           </div>
 
           <Link
@@ -84,6 +86,9 @@ export default function DashboardPage() {
             <span>Run Backup</span>
           </Link>
         </div>
+
+        {/* Server / Database Connection Selector */}
+        <ConnectionSelector onConnectionChange={fetchData} />
 
         {/* Stat Cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">

@@ -1,8 +1,19 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { SettingsConfig } from '@/types/backup';
+import { MongoConnectionProfile, SettingsConfig } from '@/types/backup';
 
 const SETTINGS_FILE_PATH = path.join(process.cwd(), 'data', 'settings.json');
+
+const DEFAULT_LOCAL_PROFILE: MongoConnectionProfile = {
+  id: 'local-docker',
+  name: 'Local Docker (ast-mongodb)',
+  type: 'LOCAL_DOCKER',
+  containerName: process.env.MONGODB_CONTAINER || 'ast-mongodb',
+  database: process.env.MONGODB_DATABASE || 'factory',
+  username: process.env.MONGODB_USER || 'aspeed_db',
+  password: process.env.MONGODB_PASS || 'db5274',
+  authDatabase: process.env.MONGODB_AUTH_DB || 'admin'
+};
 
 const DEFAULT_SETTINGS: SettingsConfig = {
   mongodbContainer: process.env.MONGODB_CONTAINER || 'ast-mongodb',
@@ -13,7 +24,9 @@ const DEFAULT_SETTINGS: SettingsConfig = {
     cameras: true
   },
   retentionDays: 30,
-  autoCleanupEnabled: true
+  autoCleanupEnabled: true,
+  activeConnectionId: 'local-docker',
+  connections: [DEFAULT_LOCAL_PROFILE]
 };
 
 let cachedSettings: SettingsConfig | null = null;
@@ -32,7 +45,21 @@ export async function getSettings(): Promise<SettingsConfig> {
   try {
     await ensureDataDir();
     const data = await fs.readFile(SETTINGS_FILE_PATH, 'utf-8');
-    cachedSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(data) };
+    const parsed = JSON.parse(data);
+    
+    // Ensure default local profile is present if connections array is empty
+    const connections = parsed.connections && parsed.connections.length > 0
+      ? parsed.connections
+      : [DEFAULT_LOCAL_PROFILE];
+      
+    const activeConnectionId = parsed.activeConnectionId || connections[0].id;
+
+    cachedSettings = {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      connections,
+      activeConnectionId
+    };
   } catch {
     cachedSettings = { ...DEFAULT_SETTINGS };
   }
@@ -49,4 +76,10 @@ export async function updateSettings(newSettings: Partial<SettingsConfig>): Prom
     console.error('Failed to save settings:', err);
   }
   return cachedSettings;
+}
+
+export async function getActiveConnection(): Promise<MongoConnectionProfile> {
+  const settings = await getSettings();
+  const profile = settings.connections?.find(c => c.id === settings.activeConnectionId);
+  return profile || DEFAULT_LOCAL_PROFILE;
 }

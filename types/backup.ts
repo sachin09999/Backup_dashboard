@@ -72,16 +72,29 @@ export interface ScheduleConfig {
   nextRun?: string;
 }
 
+export interface MongoConnectionProfile {
+  id: string;
+  name: string;
+  type: 'LOCAL_DOCKER' | 'REMOTE_URI';
+  uri?: string; // e.g. mongodb://user:pass@host:port/dbname?authSource=admin
+  containerName?: string;
+  host?: string;
+  port?: number;
+  database: string;
+  username?: string;
+  password?: string;
+  authDatabase?: string;
+}
+
 export interface SettingsConfig {
   mongodbContainer: string;
   mongodbDatabase: string;
   backupDirectory: string;
-  collections: {
-    plants: boolean;
-    cameras: boolean;
-  };
+  collections: Record<string, boolean>;
   retentionDays: number; // 7, 14, 30, 60, 90, 0 (forever)
   autoCleanupEnabled: boolean;
+  activeConnectionId?: string;
+  connections?: MongoConnectionProfile[];
 }
 
 export interface SSEProgressEvent {

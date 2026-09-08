@@ -12,16 +12,33 @@ import { checkMongoHealth } from '@/lib/mongodb/mongoClient';
 
 const execAsync = promisify(exec);
 
+import { getActiveConnection, getSettings } from '@/lib/settings/settingsStore';
+
 export type ProgressCallback = (event: SSEProgressEvent) => void;
 
-export async function executeBackup(onProgress?: ProgressCallback): Promise<BackupMetadata> {
+export async function executeBackup(onProgress?: ProgressCallback, customCollections?: string[]): Promise<BackupMetadata> {
   const startTime = Date.now();
-  const containerName = process.env.MONGODB_CONTAINER || 'ast-mongodb';
-  const dbName = process.env.MONGODB_DATABASE || 'factory';
-  const mongoUser = process.env.MONGODB_USER || 'aspeed_db';
-  const mongoPass = process.env.MONGODB_PASS || 'db5274';
-  const authDb = process.env.MONGODB_AUTH_DB || 'admin';
-  const collectionsToExport = ['plants', 'cameras'];
+  const profile = await getActiveConnection();
+  const settings = await getSettings();
+
+  const dbName = profile.database || 'factory';
+  
+  // Determine collections to export
+  let collectionsToExport: string[] = [];
+  if (customCollections && customCollections.length > 0) {
+    collectionsToExport = customCollections;
+  } else {
+    // Check enabled collections in settings or health
+    const enabledInSettings = Object.entries(settings.collections || {})
+      .filter(([, enabled]) => enabled)
+      .map(([col]) => col);
+      
+    if (enabledInSettings.length > 0) {
+      collectionsToExport = enabledInSettings;
+    } else {
+      collectionsToExport = ['plants', 'cameras'];
+    }
+  }
 
   const reportProgress = (step: number, message: string, status: SSEProgressEvent['status'] = 'in_progress', data?: Partial<BackupMetadata>) => {
     if (onProgress) {
@@ -35,28 +52,31 @@ export async function executeBackup(onProgress?: ProgressCallback): Promise<Back
     }
   };
 
-  await addLog('INFO', 'Backup execution started');
-  reportProgress(1, 'Connecting to MongoDB and checking Docker container status...');
+  await addLog('INFO', `Backup execution started for target: ${profile.name} (${profile.type})`);
+  reportProgress(1, `Connecting to MongoDB (${profile.name})...`);
 
-  // Step 1: Check Docker container & MongoDB health
-  const dockerHealth = await checkDockerContainer(containerName);
-  if (dockerHealth.status !== 'RUNNING') {
-    const err = `Docker container "${containerName}" is not running (${dockerHealth.status})`;
-    await addLog('ERROR', err);
-    reportProgress(1, err, 'failed');
-    throw new Error(err);
+  // Step 1: Check Docker container (if local) & MongoDB health
+  if (profile.type === 'LOCAL_DOCKER') {
+    const containerName = profile.containerName || 'ast-mongodb';
+    const dockerHealth = await checkDockerContainer(containerName);
+    if (dockerHealth.status !== 'RUNNING') {
+      const err = `Docker container "${containerName}" is not running (${dockerHealth.status})`;
+      await addLog('ERROR', err);
+      reportProgress(1, err, 'failed');
+      throw new Error(err);
+    }
   }
 
-  const mongoHealth = await checkMongoHealth();
+  const mongoHealth = await checkMongoHealth(profile);
   if (mongoHealth.status !== 'ONLINE') {
-    const err = `MongoDB server is offline: ${mongoHealth.error || 'Connection failed'}`;
+    const err = `MongoDB server "${profile.name}" is offline: ${mongoHealth.error || 'Connection failed'}`;
     await addLog('ERROR', err);
     reportProgress(1, err, 'failed');
     throw new Error(err);
   }
 
-  await addLog('SUCCESS', `Connected to MongoDB (${mongoHealth.version}) inside container ${containerName}`);
-  reportProgress(1, `Connected to MongoDB database "${dbName}"`, 'completed');
+  await addLog('SUCCESS', `Connected to MongoDB (${profile.name}) - database "${dbName}"`);
+  reportProgress(1, `Connected to MongoDB database "${dbName}" (${profile.name})`, 'completed');
 
   // Create unique timestamp folder
   const baseBackupDir = await getBackupDirectory();
@@ -83,26 +103,42 @@ export async function executeBackup(onProgress?: ProgressCallback): Promise<Back
 
   // Step 2 & 3: Export collections
   let stepNumber = 2;
-  const exportedCollectionsMeta: Record<string, { documents: number; file: string; size: number; status: 'valid' | 'invalid' | 'missing' }> = {};
 
   for (const col of collectionsToExport) {
     reportProgress(stepNumber, `Exporting collection "${col}"...`);
-    await addLog('INFO', `Exporting collection "${col}" from database "${dbName}"`);
+    await addLog('INFO', `Exporting collection "${col}" from database "${dbName}" (${profile.name})`);
 
-    const containerTmpFile = `/tmp/${col}_export.json`;
     const hostTargetFile = path.join(targetFolder, `${col}.json`);
 
-    const exportCmd = `docker exec ${containerName} mongoexport --host=localhost --port=27017 --username=${mongoUser} --password="${mongoPass}" --authenticationDatabase=${authDb} --db=${dbName} --collection=${col} --out=${containerTmpFile} --jsonArray`;
-
     try {
-      await execAsync(exportCmd);
+      if (profile.type === 'REMOTE_URI' && profile.uri) {
+        const exportCmd = `mongoexport --uri="${profile.uri}" --collection=${col} --out="${hostTargetFile}" --jsonArray`;
+        await execAsync(exportCmd);
+      } else if (profile.type === 'REMOTE_URI' && profile.host) {
+        const port = profile.port || 27017;
+        const authDb = profile.authDatabase || 'admin';
+        const user = profile.username ? `--username=${profile.username}` : '';
+        const pass = profile.password ? `--password="${profile.password}"` : '';
+        const exportCmd = `mongoexport --host=${profile.host} --port=${port} ${user} ${pass} --authenticationDatabase=${authDb} --db=${dbName} --collection=${col} --out="${hostTargetFile}" --jsonArray`;
+        await execAsync(exportCmd);
+      } else {
+        // LOCAL_DOCKER
+        const containerName = profile.containerName || 'ast-mongodb';
+        const containerTmpFile = `/tmp/${col}_export.json`;
+        const mongoUser = profile.username || process.env.MONGODB_USER || 'aspeed_db';
+        const mongoPass = profile.password || process.env.MONGODB_PASS || 'db5274';
+        const authDb = profile.authDatabase || process.env.MONGODB_AUTH_DB || 'admin';
 
-      // Copy file from container to host backup directory
-      const cpCmd = `docker cp ${containerName}:${containerTmpFile} "${hostTargetFile}"`;
-      await execAsync(cpCmd);
+        const exportCmd = `docker exec ${containerName} mongoexport --host=localhost --port=27017 --username=${mongoUser} --password="${mongoPass}" --authenticationDatabase=${authDb} --db=${dbName} --collection=${col} --out=${containerTmpFile} --jsonArray`;
+        await execAsync(exportCmd);
 
-      // Remove temp file inside container
-      await execAsync(`docker exec ${containerName} rm -f ${containerTmpFile}`).catch(() => {});
+        // Copy file from container to host backup directory
+        const cpCmd = `docker cp ${containerName}:${containerTmpFile} "${hostTargetFile}"`;
+        await execAsync(cpCmd);
+
+        // Remove temp file inside container
+        await execAsync(`docker exec ${containerName} rm -f ${containerTmpFile}`).catch(() => {});
+      }
 
       // Post-process file to match MongoDB Compass export format exactly (2-space indents, [{...}])
       try {

@@ -92,7 +92,7 @@ export async function executeBackup(onProgress?: ProgressCallback): Promise<Back
     const containerTmpFile = `/tmp/${col}_export.json`;
     const hostTargetFile = path.join(targetFolder, `${col}.json`);
 
-    const exportCmd = `docker exec ${containerName} mongoexport --host=localhost --port=27017 --username=${mongoUser} --password="${mongoPass}" --authenticationDatabase=${authDb} --db=${dbName} --collection=${col} --out=${containerTmpFile} --jsonArray --pretty`;
+    const exportCmd = `docker exec ${containerName} mongoexport --host=localhost --port=27017 --username=${mongoUser} --password="${mongoPass}" --authenticationDatabase=${authDb} --db=${dbName} --collection=${col} --out=${containerTmpFile} --jsonArray`;
 
     try {
       await execAsync(exportCmd);
@@ -103,6 +103,18 @@ export async function executeBackup(onProgress?: ProgressCallback): Promise<Back
 
       // Remove temp file inside container
       await execAsync(`docker exec ${containerName} rm -f ${containerTmpFile}`).catch(() => {});
+
+      // Post-process file to match MongoDB Compass export format exactly (2-space indents, [{...}])
+      try {
+        const rawContent = await fs.readFile(hostTargetFile, 'utf-8');
+        const parsedContent = JSON.parse(rawContent);
+        if (Array.isArray(parsedContent)) {
+          const compassFormatted = formatCompassJson(parsedContent);
+          await fs.writeFile(hostTargetFile, compassFormatted, 'utf-8');
+        }
+      } catch (reformatErr) {
+        await addLog('WARNING', `Could not reformat "${col}" to Compass JSON format: ${reformatErr}`);
+      }
 
       // Check file stats on host
       const stat = await fs.stat(hostTargetFile);
@@ -167,4 +179,27 @@ export async function executeBackup(onProgress?: ProgressCallback): Promise<Back
   reportProgress(7, `Backup ${timestampFolder} completed successfully!`, 'completed', metadata);
 
   return metadata;
+}
+
+/**
+ * Formats an array of JSON objects to match MongoDB Compass export format exactly:
+ * - 2 spaces indentation
+ * - Starts with `[{` on line 1
+ * - Top-level array items separated by `},\n{`
+ * - Ends with `}]` on line last
+ */
+export function formatCompassJson(arr: unknown[]): string {
+  if (!Array.isArray(arr) || arr.length === 0) return '[]';
+  const formattedItems = arr.map(item => JSON.stringify(item, null, 2));
+  if (formattedItems.length === 1) return '[' + formattedItems[0] + ']';
+
+  const first = '[' + formattedItems[0] + ',';
+  const last = formattedItems[formattedItems.length - 1] + ']';
+
+  if (formattedItems.length === 2) {
+    return first + '\n' + last;
+  }
+
+  const middle = formattedItems.slice(1, -1).map(item => item + ',').join('\n');
+  return first + '\n' + middle + '\n' + last;
 }

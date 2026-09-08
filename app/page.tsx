@@ -10,7 +10,7 @@ import { BackupMetadata, SystemHealth } from '@/types/backup';
 import { PlayCircle, Database, Calendar, ScrollText, Download, Eye, Trash2, ArrowRight, HardDrive, FileJson, CheckCircle2 } from 'lucide-react';
 import { formatBytes } from '@/lib/utils/formatters';
 
-import { ConnectionSelector } from '@/components/settings/ConnectionSelector';
+import { ServerCardGrid } from '@/components/settings/ServerCardGrid';
 
 export default function DashboardPage() {
   const [backups, setBackups] = useState<BackupMetadata[]>([]);
@@ -87,8 +87,8 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Server / Database Connection Selector */}
-        <ConnectionSelector onConnectionChange={fetchData} />
+        {/* Server & Database Selection Cards */}
+        <ServerCardGrid onServerSelected={fetchData} />
 
         {/* Stat Cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">

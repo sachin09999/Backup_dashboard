@@ -1,0 +1,48 @@
+name: Deploy MongoDB Backup Center
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Next.js Application
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          MONGODB_CONTAINER: ast-mongodb
+          MONGODB_DATABASE: factory
+          BACKUP_DIRECTORY: /home/rmg/mongodb-backups
+
+      # SSH Deployment to UAE-Primary-SRV
+      # Requires GitHub Secrets: SERVER_HOST, SERVER_USER, SERVER_SSH_KEY
+      - name: Deploy to UAE-Primary-SRV Server
+        uses: appleboy/ssh-action@v1.0.3
+        if: ${{ secrets.SERVER_HOST != '' }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /home/dts-sachin/Music/backup_dashboard
+            git pull origin main
+            npm ci
+            npm run build
+            # Restart application via PM2 or systemd
+            pm2 restart backup-center || pm2 start npm --name "backup-center" -- run start -- -p 3005

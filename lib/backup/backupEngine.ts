@@ -92,7 +92,7 @@ export async function executeBackup(onProgress?: ProgressCallback): Promise<Back
     const containerTmpFile = `/tmp/${col}_export.json`;
     const hostTargetFile = path.join(targetFolder, `${col}.json`);
 
-    const exportCmd = `docker exec ${containerName} mongoexport --host=localhost --port=27017 --username=${mongoUser} --password="${mongoPass}" --authenticationDatabase=${authDb} --db=${dbName} --collection=${col} --out=${containerTmpFile} --jsonArray`;
+    const exportCmd = `docker exec ${containerName} mongoexport --host=localhost --port=27017 --username=${mongoUser} --password="${mongoPass}" --authenticationDatabase=${authDb} --db=${dbName} --collection=${col} --out=${containerTmpFile} --jsonArray --pretty`;
 
     try {
       await execAsync(exportCmd);

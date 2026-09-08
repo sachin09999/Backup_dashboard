@@ -31,11 +31,11 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
   }, [fetchHealth]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex antialiased">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex antialiased w-full">
       <Sidebar health={health} />
       <div className="flex-1 flex flex-col min-w-0">
-        <TopBar health={health} onRefresh={fetchHealth} isRefreshing={isRefreshing} />
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <TopBar onRefresh={fetchHealth} isRefreshing={isRefreshing} />
+        <main className="flex-1 p-5 overflow-y-auto">
           {children}
         </main>
       </div>

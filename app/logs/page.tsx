@@ -55,23 +55,23 @@ export default function LogsPage() {
 
   return (
     <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/80">
           <div>
-            <h1 className="text-2xl font-bold font-mono tracking-tight text-slate-100 flex items-center gap-3">
-              <ScrollText className="h-7 w-7 text-purple-400" />
+            <h1 className="text-xl font-bold font-mono tracking-tight text-slate-100 flex items-center gap-2">
+              <ScrollText className="h-5 w-5 text-purple-400" />
               System Execution Logs
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-xs text-slate-400 mt-0.5">
               Inspect application logs, backup export history, validation checks, and health events.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={fetchLogs}
-              className="p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
+              className="p-2 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
               title="Refresh logs"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-purple-400' : ''}`} />
@@ -79,7 +79,7 @@ export default function LogsPage() {
 
             <button
               onClick={() => setShowClearModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-rose-500/20 border border-slate-800 hover:border-rose-500/30 text-rose-400 font-medium text-xs transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-rose-500/20 border border-slate-800 hover:border-rose-500/30 text-rose-400 font-medium text-xs transition-all"
             >
               <Trash2 className="h-4 w-4" />
               <span>Clear Logs</span>
@@ -88,27 +88,25 @@ export default function LogsPage() {
         </div>
 
         {/* Filters Toolbar */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 backdrop-blur-md flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            {/* Search Input */}
             <div className="relative flex-1 max-w-md">
-              <Search className="h-4 w-4 absolute left-3 top-3 text-slate-500" />
+              <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-slate-500" />
               <input
                 type="text"
                 placeholder="Search log messages..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-purple-500 font-mono transition-all"
+                className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-purple-500 font-mono transition-all"
               />
             </div>
 
-            {/* Level Filter Tabs */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 font-mono text-xs">
+            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 font-mono text-xs">
               {['ALL', 'INFO', 'SUCCESS', 'WARNING', 'ERROR'].map((lvl) => (
                 <button
                   key={lvl}
                   onClick={() => setLevelFilter(lvl)}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                  className={`px-2.5 py-1 rounded transition-all ${
                     levelFilter === lvl
                       ? 'bg-slate-800 text-slate-100 font-bold shadow-sm'
                       : 'text-slate-400 hover:text-slate-200'
@@ -122,7 +120,7 @@ export default function LogsPage() {
         </div>
 
         {/* Logs Table */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-xl">
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-lg">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
               <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
@@ -135,13 +133,13 @@ export default function LogsPage() {
               <tbody className="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-300">
                 {loading ? (
                   <tr>
-                    <td colSpan={3} className="p-10 text-center text-slate-500 font-sans">
+                    <td colSpan={3} className="p-8 text-center text-slate-500 font-sans">
                       Loading logs...
                     </td>
                   </tr>
                 ) : logs.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="p-10 text-center text-slate-500 font-sans">
+                    <td colSpan={3} className="p-8 text-center text-slate-500 font-sans">
                       No matching log entries found.
                     </td>
                   </tr>

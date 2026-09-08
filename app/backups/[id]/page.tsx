@@ -21,7 +21,6 @@ export default function BackupDetailPage({ params }: { params: Promise<{ id: str
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // File preview modal state
   const [previewFile, setPreviewFile] = useState<string | null>(null);
 
   const fetchBackup = useCallback(async () => {
@@ -63,7 +62,7 @@ export default function BackupDetailPage({ params }: { params: Promise<{ id: str
   if (loading) {
     return (
       <MainLayout>
-        <div className="max-w-6xl mx-auto py-12 text-center text-slate-400 font-mono">
+        <div className="w-full py-12 text-center text-slate-400 font-mono">
           Loading backup details...
         </div>
       </MainLayout>
@@ -73,13 +72,13 @@ export default function BackupDetailPage({ params }: { params: Promise<{ id: str
   if (error || !backup) {
     return (
       <MainLayout>
-        <div className="max-w-4xl mx-auto py-12 text-center space-y-4">
+        <div className="w-full py-12 text-center space-y-4">
           <AlertCircle className="h-12 w-12 text-rose-500 mx-auto" />
           <h2 className="text-xl font-bold text-slate-100">Backup Not Found</h2>
           <p className="text-sm text-slate-400">{error || 'Could not locate backup directory'}</p>
           <Link
             href="/backups"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-700 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-700 transition-all"
           >
             <ArrowLeft className="h-4 w-4" /> Return to Backups
           </Link>
@@ -101,107 +100,107 @@ export default function BackupDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="w-full space-y-6">
         {/* Back Link & Header Toolbar */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/80">
           <div className="flex items-center gap-3">
             <Link
               href="/backups"
-              className="p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+              className="p-2 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Link>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold font-mono tracking-tight text-slate-100">{backup.id}</h1>
-                <StatusBadge status={backup.status} size="lg" />
+                <h1 className="text-xl font-bold font-mono tracking-tight text-slate-100">{backup.id}</h1>
+                <StatusBadge status={backup.status} size="md" />
               </div>
-              <p className="text-xs text-slate-400 mt-1">Backup folder detail overview and JSON file inspector</p>
+              <p className="text-xs text-slate-400 mt-0.5">Backup folder overview and JSON inspector</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <a
               href={`/api/backups/${encodeURIComponent(backup.id)}/download`}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-lg shadow-emerald-600/20 transition-all"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md transition-all"
             >
               <Download className="h-4 w-4" />
-              <span>Download Complete Backup (.ZIP)</span>
+              <span>Download ZIP Archive</span>
             </a>
 
             <button
               onClick={() => setDeleteModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-rose-500/20 border border-slate-800 hover:border-rose-500/30 text-rose-400 font-medium text-xs transition-all"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-rose-500/20 border border-slate-800 hover:border-rose-500/30 text-rose-400 font-medium text-xs transition-all"
             >
               <Trash2 className="h-4 w-4" />
-              <span>Delete Backup</span>
+              <span>Delete</span>
             </button>
           </div>
         </div>
 
-        {/* Backup Summary Overview Panel */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl shadow-xl space-y-4">
-          <h2 className="text-base font-bold text-slate-100 flex items-center gap-2 border-b border-slate-800 pb-3">
-            <ShieldCheck className="h-5 w-5 text-emerald-400" /> Backup Overview
+        {/* Overview Stats */}
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-md shadow-lg space-y-3">
+          <h2 className="text-sm font-bold text-slate-100 font-mono flex items-center gap-2 border-b border-slate-800 pb-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" /> Backup Overview
           </h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
-            <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800">
-              <div className="text-slate-500 mb-1 flex items-center gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5 text-cyan-400" /> Date & Time
               </div>
-              <div className="font-bold text-slate-200 text-sm">{backup.formattedDate}</div>
+              <div className="font-bold text-slate-200 mt-1">{backup.formattedDate}</div>
               <div className="text-slate-400">{backup.formattedTime}</div>
             </div>
 
-            <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800">
-              <div className="text-slate-500 mb-1 flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-amber-400" /> Execution Duration
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-amber-400" /> Duration
               </div>
-              <div className="font-bold text-emerald-400 text-sm">{backup.durationFormatted}</div>
+              <div className="font-bold text-emerald-400 mt-1">{backup.durationFormatted}</div>
               <div className="text-slate-400">Validated export</div>
             </div>
 
-            <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800">
-              <div className="text-slate-500 mb-1 flex items-center gap-1.5">
-                <HardDrive className="h-3.5 w-3.5 text-purple-400" /> Total Storage Size
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                <HardDrive className="h-3.5 w-3.5 text-purple-400" /> Total Size
               </div>
-              <div className="font-bold text-slate-200 text-sm">{backup.formattedTotalSize}</div>
-              <div className="text-slate-400">{backup.totalDocuments} documents total</div>
+              <div className="font-bold text-slate-200 mt-1">{backup.formattedTotalSize}</div>
+              <div className="text-slate-400">{backup.totalDocuments} docs total</div>
             </div>
 
-            <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800">
-              <div className="text-slate-500 mb-1 flex items-center gap-1.5">
-                <Database className="h-3.5 w-3.5 text-emerald-400" /> Target Database
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                <Database className="h-3.5 w-3.5 text-emerald-400" /> Database
               </div>
-              <div className="font-bold text-slate-200 text-sm">{backup.database}</div>
+              <div className="font-bold text-slate-200 mt-1">{backup.database}</div>
               <div className="text-slate-400">plants & cameras</div>
             </div>
           </div>
         </div>
 
-        {/* Files Cards / Table */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-              <FileCode className="h-5 w-5 text-cyan-400" /> Exported JSON Files
+        {/* Files Cards */}
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-md shadow-lg space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h2 className="text-sm font-bold text-slate-100 font-mono flex items-center gap-2">
+              <FileCode className="h-4 w-4 text-cyan-400" /> Exported JSON Files
             </h2>
-            <span className="text-xs font-mono text-slate-400">Compass Compatible Extended JSON</span>
+            <span className="text-xs font-mono text-slate-400">Extended JSON Format</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filesList.map((file) => {
               const meta = file.meta;
               return (
-                <div key={file.name} className="p-5 rounded-xl border border-slate-800 bg-slate-950/60 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-all">
+                <div key={file.name} className="p-4 rounded-lg border border-slate-800 bg-slate-950/60 flex flex-col justify-between space-y-3 hover:border-slate-700 transition-all">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <FileCode className="h-6 w-6" />
+                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <FileCode className="h-5 w-5" />
                       </div>
                       <div>
-                        <h3 className="font-bold font-mono text-slate-100 text-sm">{file.name}</h3>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <h3 className="font-bold font-mono text-slate-100 text-xs">{file.name}</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
                           {meta ? `${meta.documents} documents • ${formatBytes(meta.size)}` : 'File unavailable'}
                         </p>
                       </div>
@@ -213,7 +212,7 @@ export default function BackupDetailPage({ params }: { params: Promise<{ id: str
                   <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
                     <button
                       onClick={() => setPreviewFile(file.name)}
-                      className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition-all border border-slate-700"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-all border border-slate-700"
                     >
                       <Eye className="h-3.5 w-3.5 text-emerald-400" />
                       <span>Preview JSON</span>
@@ -222,7 +221,7 @@ export default function BackupDetailPage({ params }: { params: Promise<{ id: str
                     <a
                       href={`/api/backups/${encodeURIComponent(backup.id)}/files/${encodeURIComponent(file.name)}?download=true`}
                       download
-                      className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-lg text-xs font-semibold transition-all border border-emerald-500/30"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-lg text-xs font-medium transition-all border border-emerald-500/30"
                     >
                       <Download className="h-3.5 w-3.5" />
                       <span>Download</span>

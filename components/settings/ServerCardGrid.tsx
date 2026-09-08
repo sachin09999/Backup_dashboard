@@ -5,7 +5,7 @@ import { MongoConnectionProfile } from '@/types/backup';
 import { Server, Plus, Check, RefreshCw, Trash2, Database, Globe, CheckCircle2, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface ServerCardGridProps {
-  onServerSelected?: () => void;
+  onServerSelected?: (id: string) => void;
 }
 
 export function ServerCardGrid({ onServerSelected }: ServerCardGridProps) {
@@ -43,18 +43,15 @@ export function ServerCardGrid({ onServerSelected }: ServerCardGridProps) {
   }, [fetchConnections]);
 
   const handleSelectServer = async (id: string) => {
-    if (id === activeId) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/connections', {
+      await fetch('/api/connections', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'activate', connectionId: id })
       });
-      if (res.ok) {
-        setActiveId(id);
-        if (onServerSelected) onServerSelected();
-      }
+      setActiveId(id);
+      if (onServerSelected) onServerSelected(id);
     } catch (err) {
       console.error('Failed to activate server:', err);
     } finally {
@@ -103,7 +100,7 @@ export function ServerCardGrid({ onServerSelected }: ServerCardGridProps) {
         setShowModal(false);
         setFormData({ name: '', type: 'REMOTE_URI', uri: '', database: 'factory', authDatabase: 'admin' });
         setTestResult(null);
-        if (onServerSelected) onServerSelected();
+        if (onServerSelected) onServerSelected(data.activeConnectionId);
       }
     } catch (err) {
       console.error('Failed to save server:', err);
@@ -127,7 +124,7 @@ export function ServerCardGrid({ onServerSelected }: ServerCardGridProps) {
         const data = await res.json();
         setConnections(data.connections || []);
         setActiveId(data.activeConnectionId);
-        if (onServerSelected) onServerSelected();
+        if (onServerSelected) onServerSelected(data.activeConnectionId);
       }
     } catch (err) {
       console.error('Failed to delete server profile:', err);

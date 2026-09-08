@@ -10,16 +10,12 @@ services:
     ports:
       - "3005:3000"
     environment:
-      - MONGODB_URI=mongodb://aspeed_db:db5274@ast-mongodb:27017/factory?authSource=admin
+      - MONGODB_URI=mongodb://aspeed_db:db5274@localhost:27017/factory?authSource=admin
       - MONGODB_CONTAINER=ast-mongodb
       - MONGODB_DATABASE=factory
       - BACKUP_DIRECTORY=/home/rmg/mongodb-backups
     volumes:
       - /home/rmg/mongodb-backups:/home/rmg/mongodb-backups
       - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - factory-network
-
-networks:
-  factory-network:
-    external: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

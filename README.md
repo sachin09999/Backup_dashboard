@@ -19,16 +19,7 @@
 
 ---
 
-## Environment Variables
 
-Create `.env.local` based on `.env.example`:
-
-```env
-MONGODB_URI=mongodb://aspeed_db:db5274@localhost:27017/factory?authSource=admin
-MONGODB_CONTAINER=ast-mongodb
-MONGODB_DATABASE=factory
-BACKUP_DIRECTORY=/home/rmg/mongodb-backups
-```
 
 ---
 
